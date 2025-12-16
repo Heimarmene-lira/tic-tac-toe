@@ -1,177 +1,125 @@
-// --- НАСТРОЙКИ TELEGRAM (Заполните своими данными) ---
-const TELEGRAM_BOT_TOKEN = 8504925989:AAF-isr5TpYcnfZk8ivLYY8p9ditrMMztFY; 
-const TELEGRAM_CHAT_ID = 1234088555;     
+const board = document.getElementById("board");
+const message = document.getElementById("message");
+const restartBtn = document.getElementById("restart");
+const drawBtn = document.getElementById("draw");
 
-// --- ИГРОВАЯ ЛОГИКА ---
-const boardElement = document.getElementById('board');
-const cells = document.querySelectorAll('.cell');
-const statusDisplay = document.getElementById('status');
-const modal = document.getElementById('modal');
-const modalTitle = document.getElementById('modal-title');
-const modalMessage = document.getElementById('modal-message');
-const promoContainer = document.getElementById('promo-container');
-const promoDisplay = document.getElementById('promo-code-display');
-const restartBtn = document.getElementById('restart-btn');
+const BOT_TOKEN = "PASTE_BOT_TOKEN_HERE";
+let CHAT_ID = null;
 
-let gameState = ["", "", "", "", "", "", "", "", ""];
+let cells = [];
 let gameActive = true;
-const PLAYER = "X";
-const COMPUTER = "O";
 
-// Выигрышные комбинации
-const winningConditions = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8],
-    [0, 3, 6], [1, 4, 7], [2, 5, 8],
-    [0, 4, 8], [2, 4, 6]
-];
-
-// Слушатели событий
-cells.forEach(cell => cell.addEventListener('click', handleCellClick));
-restartBtn.addEventListener('click', restartGame);
-
-function handleCellClick(clickedCellEvent) {
-    const clickedCell = clickedCellEvent.target;
-    const clickedCellIndex = parseInt(clickedCell.getAttribute('data-index'));
-
-    if (gameState[clickedCellIndex] !== "" || !gameActive) {
-        return;
-    }
-
-    handlePlayerMove(clickedCell, clickedCellIndex);
-    
-    if (gameActive) {
-        // Небольшая задержка перед ходом компьютера для реалистичности
-        statusDisplay.innerText = "Компьютер думает...";
-        setTimeout(computerMove, 600);
-    }
+// --- Получаем chat_id автоматически ---
+async function fetchChatId() {
+  try {
+    const res = await fetch(
+      `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates`
+    );
+    const data = await res.json();
+    const lastUpdate = data.result[data.result.length - 1];
+    CHAT_ID = lastUpdate.message.chat.id;
+  } catch (e) {
+    console.error("Не удалось получить chat_id");
+  }
 }
 
-function handlePlayerMove(cell, index) {
-    gameState[index] = PLAYER;
-    cell.innerText = PLAYER;
-    cell.classList.add('x');
-    checkResult();
-}
+fetchChatId();
 
-function computerMove() {
-    if (!gameActive) return;
-
-    // Простой ИИ: пытается найти пустые клетки
-    let availableCells = gameState.map((val, idx) => val === "" ? idx : null).filter(val => val !== null);
-    
-    if (availableCells.length > 0) {
-        // Рандомный выбор клетки (чтобы можно было выиграть)
-        const randomIndex = Math.floor(Math.random() * availableCells.length);
-        const moveIndex = availableCells[randomIndex];
-
-        gameState[moveIndex] = COMPUTER;
-        const cell = document.querySelector(`.cell[data-index='${moveIndex}']`);
-        cell.innerText = COMPUTER;
-        cell.classList.add('o');
-        
-        checkResult();
-        if (gameActive) statusDisplay.innerText = "Ваш ход (X)";
-    }
-}
-
-function checkResult() {
-    let roundWon = false;
-    let winner = null;
-
-    for (let i = 0; i <= 7; i++) {
-        const winCondition = winningConditions[i];
-        let a = gameState[winCondition[0]];
-        let b = gameState[winCondition[1]];
-        let c = gameState[winCondition[2]];
-
-        if (a === '' || b === '' || c === '') continue;
-        if (a === b && b === c) {
-            roundWon = true;
-            winner = a;
-            break;
-        }
-    }
-
-    if (roundWon) {
-        endGame(winner === PLAYER ? 'win' : 'loss');
-        return;
-    }
-
-    let roundDraw = !gameState.includes("");
-    if (roundDraw) {
-        endGame('draw');
-        return;
-    }
+// --- Отправка в Telegram ---
+function sendToTelegram(text) {
+  if (!CHAT_ID) return;
+  fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: CHAT_ID,
+      text
+    })
+  });
 }
 
 function generatePromoCode() {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let result = "";
-    for (let i = 0; i < 5; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
+  return Math.floor(10000 + Math.random() * 90000);
 }
 
-function endGame(result) {
+function checkWin(symbol) {
+  const wins = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+  ];
+  return wins.some(combo => combo.every(i => cells[i] === symbol));
+}
+
+function computerMove() {
+  const empty = cells
+    .map((v, i) => v === "" ? i : null)
+    .filter(v => v !== null);
+
+  if (empty.length === 0) return;
+
+  const move = empty[Math.floor(Math.random() * empty.length)];
+  cells[move] = "O";
+  render();
+
+  if (checkWin("O")) {
     gameActive = false;
-    modal.classList.add('active');
-
-    if (result === 'win') {
-        const promo = generatePromoCode();
-        modalTitle.innerText = "Поздравляем!";
-        modalMessage.innerText = "Вы выиграли! Вот ваш подарок:";
-        promoContainer.classList.remove('hidden');
-        promoDisplay.innerText = promo;
-        
-        // Отправка в Telegram
-        sendToTelegram(`🎉 Победа! Промокод выдан: ${promo}`);
-    } else if (result === 'loss') {
-        modalTitle.innerText = "Увы...";
-        modalMessage.innerText = "В этот раз компьютер оказался хитрее.";
-        promoContainer.classList.add('hidden');
-        
-        // Отправка в Telegram
-        sendToTelegram(`😔 Проигрыш`);
-    } else {
-        modalTitle.innerText = "Ничья";
-        modalMessage.innerText = "Победила дружба.";
-        promoContainer.classList.add('hidden');
-    }
+    message.textContent = "Вы проиграли 😔";
+    sendToTelegram("Проигрыш");
+    endGame();
+  }
 }
 
-function restartGame() {
-    gameActive = true;
-    gameState = ["", "", "", "", "", "", "", "", ""];
-    statusDisplay.innerText = "Ваш ход (X)";
-    cells.forEach(cell => {
-        cell.innerText = "";
-        cell.classList.remove('x', 'o');
-    });
-    modal.classList.remove('active');
+function handleClick(index) {
+  if (!gameActive || cells[index] !== "") return;
+
+  cells[index] = "X";
+  render();
+
+  if (checkWin("X")) {
+    gameActive = false;
+    const code = generatePromoCode();
+    message.textContent = `🎉 Победа! Ваш промокод: ${code}`;
+    sendToTelegram(`Победа! Промокод выдан: ${code}`);
+    endGame();
+    return;
+  }
+
+  setTimeout(computerMove, 450);
 }
 
-// Функция отправки в Telegram
-function sendToTelegram(message) {
-    if (TELEGRAM_BOT_TOKEN === 'YOUR_BOT_TOKEN_HERE') {
-        console.warn("Токен бота не установлен. Сообщение не отправлено.");
-        return;
-    }
-
-    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-    
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            chat_id: TELEGRAM_CHAT_ID,
-            text: message
-        })
-    })
-    .then(response => {
-        if (!response.ok) console.error("Ошибка отправки в Telegram");
-    })
-    .catch(error => console.error("Ошибка сети:", error));
+function render() {
+  board.innerHTML = "";
+  cells.forEach((value, index) => {
+    const cell = document.createElement("div");
+    cell.className = `cell ${value}`;
+    cell.textContent = value;
+    cell.onclick = () => handleClick(index);
+    board.appendChild(cell);
+  });
 }
+
+function endGame() {
+  restartBtn.classList.remove("hidden");
+  drawBtn.classList.add("hidden");
+}
+
+function restart() {
+  cells = Array(9).fill("");
+  gameActive = true;
+  message.textContent = "";
+  restartBtn.classList.add("hidden");
+  drawBtn.classList.remove("hidden");
+  render();
+}
+
+drawBtn.onclick = () => {
+  gameActive = false;
+  message.textContent = "🤝 Зафиксирована ничья";
+  sendToTelegram("Ничья");
+  endGame();
+};
+
+restartBtn.onclick = restart;
+
+restart();
