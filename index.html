@@ -1,29 +1,173 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>Крестики-нолики</title>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Крестики-нолики | Игра для женщин</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Source+Sans+Pro:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
 </head>
 <body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-heart"></i> Крестики-Нолики Премиум</h1>
+            <p class="subtitle">Элегантная игра для стильных женщин 25-40 лет</p>
+        </header>
 
-<div class="container">
-  <h1>Крестики-нолики</h1>
-  <p class="subtitle">Сыграйте и получите скидку 💖</p>
+        <main>
+            <!-- Панель настройки бота -->
+            <div class="bot-config-section" id="botConfigSection">
+                <h3><i class="fab fa-telegram"></i> Настройка Telegram-уведомлений</h3>
+                <div class="config-form">
+                    <div class="input-group">
+                        <label for="botToken"><i class="fas fa-key"></i> Токен вашего бота:</label>
+                        <input type="text" id="botToken" 
+                               placeholder="Например: 1234567890:AAF-isr5TpYcnfZk8ivLYY8p9ditrMMztFY"
+                               value="8504925989:AAF-isr5TpYcnfZk8ivLYY8p9ditrMMztFY">
+                        <small>Получите у @BotFather в Telegram</small>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label><i class="fas fa-id-card"></i> Автоматический Chat ID:</label>
+                        <div class="chat-id-display">
+                            <span id="chatIdDisplay">Не определён</span>
+                            <button class="btn-small" id="autoDetectBtn">
+                                <i class="fas fa-sync-alt"></i> Автоопределить
+                            </button>
+                        </div>
+                        <small>Напишите "Старт" вашему боту, затем нажмите эту кнопку</small>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="manualChatId"><i class="fas fa-edit"></i> Или введите вручную:</label>
+                        <input type="text" id="manualChatId" placeholder="Например: 123456789">
+                    </div>
+                    
+                    <div class="status-message" id="configStatus"></div>
+                    
+                    <button class="btn save-config" id="saveConfigBtn">
+                        <i class="fas fa-save"></i> Сохранить настройки
+                    </button>
+                </div>
+                
+                <div class="config-info">
+                    <h4><i class="fas fa-info-circle"></i> Как настроить:</h4>
+                    <ol>
+                        <li>Создайте бота через <a href="https://t.me/BotFather" target="_blank">@BotFather</a></li>
+                        <li>Скопируйте токен и вставьте выше</li>
+                        <li>Напишите вашему боту любое сообщение (например, "Привет")</li>
+                        <li>Нажмите "Автоопределить"</li>
+                        <li>Нажмите "Сохранить настройки"</li>
+                    </ol>
+                </div>
+            </div>
 
-  <div id="board" class="board"></div>
+            <!-- Игровое поле -->
+            <div class="game-section">
+                <div class="game-info">
+                    <div class="player-info">
+                        <span class="player-badge">Вы</span>
+                        <span class="symbol">❌</span>
+                    </div>
+                    <div class="game-status" id="gameStatus">Ваш ход</div>
+                    <div class="player-info">
+                        <span class="symbol">⭕</span>
+                        <span class="player-badge">Компьютер</span>
+                    </div>
+                </div>
 
-  <div id="message" class="message"></div>
+                <div class="board" id="board">
+                    <div class="cell" data-index="0"></div>
+                    <div class="cell" data-index="1"></div>
+                    <div class="cell" data-index="2"></div>
+                    <div class="cell" data-index="3"></div>
+                    <div class="cell" data-index="4"></div>
+                    <div class="cell" data-index="5"></div>
+                    <div class="cell" data-index="6"></div>
+                    <div class="cell" data-index="7"></div>
+                    <div class="cell" data-index="8"></div>
+                </div>
 
-  <button id="restart" class="hidden">Сыграть ещё раз</button>
-</div>
+                <!-- Уведомление о победе -->
+                <div class="notification hidden" id="winNotification">
+                    <div class="notification-header">
+                        <i class="fas fa-trophy"></i>
+                        <h3>Поздравляем с победой!</h3>
+                    </div>
+                    <p>Вы выиграли промокод на скидку:</p>
+                    <div class="promo-code" id="promoCode">XXXXX</div>
+                    <p class="notification-note">Промокод уже отправлен в ваш Telegram!</p>
+                    <button class="btn" id="continueBtn">Продолжить игру</button>
+                </div>
 
-    <div class="actions">
-  <button id="draw" class="secondary">Зафиксировать ничью</button>
-  <button id="restart" class="primary hidden">Сыграть ещё раз</button>
-</div>
+                <!-- Уведомление о проигрыше -->
+                <div class="notification hidden" id="loseNotification">
+                    <div class="notification-header">
+                        <i class="fas fa-heart-broken"></i>
+                        <h3>Попробуйте ещё раз!</h3>
+                    </div>
+                    <p>Не расстраивайтесь, в следующий раз обязательно получится!</p>
+                    <button class="btn" id="playAgainBtn">Сыграть снова</button>
+                </div>
 
-<script src="script.js"></script>
+                <!-- Управление -->
+                <div class="controls">
+                    <button class="btn" id="newGameBtn">
+                        <i class="fas fa-plus-circle"></i> Новая игра
+                    </button>
+                    <button class="btn secondary" id="toggleConfigBtn">
+                        <i class="fas fa-cog"></i> Настройки
+                    </button>
+                </div>
+            </div>
+
+            <!-- Статистика -->
+            <div class="stats-section">
+                <h3><i class="fas fa-chart-line"></i> Статистика</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="winsCount">0</div>
+                        <div class="stat-label">Побед</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="lossesCount">0</div>
+                        <div class="stat-label">Поражений</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="promosCount">0</div>
+                        <div class="stat-label">Промокодов</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p><i class="fas fa-spa"></i> Игра создана с любовью для прекрасных женщин 
+               <br><i class="fab fa-telegram"></i> Уведомления отправляются автоматически в Telegram</p>
+            <div class="footer-links">
+                <a href="#" id="viewInstructions"><i class="fas fa-book"></i> Правила игры</a>
+                <a href="#" id="resetStats"><i class="fas fa-trash-alt"></i> Сбросить статистику</a>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Модальное окно с инструкциями -->
+    <div class="modal hidden" id="instructionsModal">
+        <div class="modal-content">
+            <h2><i class="fas fa-book-open"></i> Правила игры</h2>
+            <ul>
+                <li><strong>Вы играете крестиками (❌)</strong>, компьютер — ноликами (⭕)</li>
+                <li>Цель: первым выстроить три своих символа в ряд (по горизонтали, вертикали или диагонали)</li>
+                <li>Нажимайте на любую пустую ячейку, чтобы сделать ход</li>
+                <li>При победе вы получите уникальный промокод на скидку, который автоматически отправится в Telegram</li>
+                <li>После игры можно начать новую, нажав соответствующую кнопку</li>
+            </ul>
+            <button class="btn close-modal" id="closeInstructionsBtn">Закрыть</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
