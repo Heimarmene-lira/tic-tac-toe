@@ -1,24 +1,47 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>Крестики-нолики</title>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe | Exclusive Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="container">
-  <h1>Крестики-нолики</h1>
-  <p class="subtitle">Сыграйте и получите скидку 💖</p>
+    <div class="container">
+        <header>
+            <h1>Tic Tac Toe</h1>
+            <p>Сделайте паузу и испытайте удачу</p>
+        </header>
 
-  <div id="board" class="board"></div>
+        <div class="game-board" id="board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
 
-  <div id="message" class="message"></div>
+        <div class="status" id="status">Ваш ход (X)</div>
+    </div>
 
-  <button id="restart" class="hidden">Сыграть ещё раз</button>
-</div>
+    <div class="modal-overlay" id="modal">
+        <div class="modal-content">
+            <h2 id="modal-title"></h2>
+            <p id="modal-message"></p>
+            <div id="promo-container" class="hidden">
+                <span class="promo-label">Ваш промокод:</span>
+                <div class="promo-code" id="promo-code-display"></div>
+            </div>
+            <button id="restart-btn">Сыграть ещё раз</button>
+        </div>
+    </div>
 
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
