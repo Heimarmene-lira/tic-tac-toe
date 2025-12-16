@@ -2,8 +2,8 @@ const board = document.getElementById("board");
 const message = document.getElementById("message");
 const restartBtn = document.getElementById("restart");
 
-const BOT_TOKEN = "PASTE_BOT_TOKEN_HERE";
-const CHAT_ID = "PASTE_CHAT_ID_HERE";
+const BOT_TOKEN = "8504925989:AAF-isr5TpYcnfZk8ivLYY8p9ditrMMztFY";
+const CHAT_ID = "1234088555";
 
 let cells = [];
 let gameActive = true;
